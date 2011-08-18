@@ -9,6 +9,8 @@
 #  updated_at         :datetime
 #  encrypted_password :string(255)
 #  salt               :string(255)
+#  admin              :boolean
+#
 
 class User < ActiveRecord::Base
   attr_accessor   :password
