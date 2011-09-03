@@ -9,7 +9,7 @@
 #  updated_at         :datetime
 #  encrypted_password :string(255)
 #  salt               :string(255)
-#  admin              :boolean
+#  admin              :boolean         default(FALSE)
 #
 
 class User < ActiveRecord::Base
@@ -20,6 +20,11 @@ class User < ActiveRecord::Base
                   :password_confirmation
                   
   has_many :microposts, :dependent => :destroy
+  has_many :relationships, :dependent => :destroy, :foreign_key => "follower_id"
+  has_many :reverse_relationships, :dependent => :destroy, :foreign_key => "followed_id", :class_name => "Relationship"
+  has_many :following, :through => :relationships, :source => :followed
+  has_many :followers, :through => :reverse_relationships, :source => :follower 
+   
   
   email_regex = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
   
@@ -41,6 +46,18 @@ class User < ActiveRecord::Base
   
   def feed
     Micropost.where("user_id = ?", self.id)
+  end
+  
+  def following?(followed)
+    self.relationships.find_by_followed_id(followed)
+  end
+  
+  def follow!(followed)
+    relationships.create!(:followed_id => followed.id)
+  end
+  
+  def unfollow!(followed)
+    self.relationships.find_by_followed_id(followed).destroy
   end
   
   class << self
